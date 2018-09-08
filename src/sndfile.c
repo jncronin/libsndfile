@@ -838,6 +838,9 @@ sf_format_check	(const SF_INFO *info)
 					return 1 ;
 				break ;
 
+		case SF_FORMAT_MP3 :
+				return 1 ;
+
 		case SF_FORMAT_MPC2K :
 				if (info->channels > 2)
 					return 0 ;
@@ -2710,6 +2713,12 @@ guess_file_type (SF_PRIVATE *psf)
 	if (buffer [0] == MAKE_MARKER ('O', 'g', 'g', 'S'))
 		return SF_FORMAT_OGG ;
 
+	/* TODO: handle big endian */
+	if ((buffer [0] & 0xffff) == 0xfbff)
+		return SF_FORMAT_MP3 ;
+	if ((buffer [0] & 0xffffff) == 0x334449)
+		return SF_FORMAT_MP3 ;
+
 	if (buffer [0] == MAKE_MARKER ('A', 'L', 'a', 'w') && buffer [1] == MAKE_MARKER ('S', 'o', 'u', 'n')
 			&& buffer [2] == MAKE_MARKER ('d', 'F', 'i', 'l'))
 		return SF_FORMAT_WVE ;
@@ -3096,6 +3105,10 @@ psf_open_file (SF_PRIVATE *psf, SF_INFO *sfinfo)
 
 		case	SF_FORMAT_OGG :
 				error = ogg_open (psf) ;
+				break ;
+
+		case	SF_FORMAT_MP3 :
+				error = mp3_open (psf) ;
 				break ;
 
 		case	SF_FORMAT_TXW :
