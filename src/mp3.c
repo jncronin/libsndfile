@@ -53,8 +53,12 @@ static sf_count_t mp3_read_ ## FROMTYPE ## _ ## TOTYPE (SF_PRIVATE *psf, TOTYPE 
 	return samps_read ; \
 }
 
+/* The following wrap psf_fread/fseek for mpg123 */
 static ssize_t mp3_read_wrapper (void *fildes, void *buf, size_t nbyte) ;
 static off_t mp3_seek_wrapper (void *fildes, off_t val, int dir) ;
+
+/* The following is the actual libsndfile seek function */
+static sf_count_t mp3_file_seek (SF_PRIVATE *psf, int mode, sf_count_t samples_from_start) ;
 
 typedef struct
 {
@@ -112,6 +116,7 @@ mp3_open	(SF_PRIVATE *psf)
 	}
 
 	psf->codec_data = mdata ;
+	psf->seek = mp3_file_seek ;
 
 	mdata->mh = mpg123_new (NULL, &mdata->error) ;
 	if (!mdata->mh)
@@ -267,6 +272,34 @@ static ssize_t mp3_read_wrapper (void *fildes, void *buf, size_t nbyte)
 static off_t mp3_seek_wrapper (void *fildes, off_t val, int dir)
 {
 	return psf_fseek ((SF_PRIVATE *) fildes, (sf_count_t) val, dir) ;
+}
+
+
+
+static sf_count_t mp3_file_seek (SF_PRIVATE *psf, int mode, sf_count_t samples_from_start)
+{
+	off_t target_count, frame_count, foffset ;
+	MP3_PRIVATE *mdata = (MP3_PRIVATE *) psf->codec_data ;
+
+	/* Ignore mode - it is file read/write mode rather than 'whence' */
+	(void) mode ;
+
+	/* Get the actual sample offset we are looking for, followed by the
+	 *  offset of the frame that contains it */
+	target_count = mpg123_seek (mdata->mh, (off_t) samples_from_start, SEEK_SET) ;
+	mpg123_seek_frame (mdata->mh, mpg123_tellframe (mdata->mh), SEEK_SET) ;
+	frame_count = mpg123_tell (mdata->mh) ;
+
+	mdata->error = mpg123_decode_frame (mdata->mh,
+			&foffset,
+			&mdata->buf,
+			&mdata->buflen) ;
+
+	/* Calculate the actual byte offset of the current data (= channels * sample size) */
+	mdata->bufptr = ((target_count - frame_count) * psf->sf.channels *
+			MPG123_SAMPLESIZE (mdata->encoding)) ;
+
+	return (sf_count_t) target_count ;
 }
 
 #else /* HAVE_MPG123 */
