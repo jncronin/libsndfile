@@ -328,6 +328,13 @@ AX_REQUIRE_DEFINED([PKG_INSTALLDIR])
 PKG_INSTALLDIR
 
 AS_IF([test -n "$PKG_CONFIG"], [
+       		PKG_CHECK_MODULES(libmpg123, libmpg123, [
+						    CFLAGS="${CFLAGS} ${MPG123_CFLAGS}"
+						    LIBS="${LIBS} ${MPG123_LIBS}"
+						    AC_DEFINE([HAVE_MPG123], [1], [Set to 1 if you have libmpg123])
+						    enable_libmpg123=yes
+						  ], [ ])
+
 		AS_IF([test "x$enable_external_libs" = "xno"], [
 				AC_MSG_WARN([[*** External libs (FLAC, Ogg, Vorbis) disabled. ***]])
 			], [
@@ -703,6 +710,7 @@ AC_MSG_RESULT([
     Experimental code : ................... ${enable_experimental:-no}
     Using ALSA in example programs : ...... ${enable_alsa:-no}
     External FLAC/Ogg/Vorbis : ............ ${enable_external_libs:-no}
+    External libmpg123 : .................. ${enable_libmpg123:-no}
     Building Octave interface : ........... ${OCTAVE_BUILD}
 
   Tools :
