@@ -329,8 +329,8 @@ PKG_INSTALLDIR
 
 AS_IF([test -n "$PKG_CONFIG"], [
        		PKG_CHECK_MODULES(libmpg123, libmpg123, [
-						    CFLAGS="${CFLAGS} ${MPG123_CFLAGS}"
-						    LIBS="${LIBS} ${MPG123_LIBS}"
+						    CFLAGS="${CFLAGS} ${libmpg123_CFLAGS}"
+						    LIBS="${LIBS} ${libmpg123_LIBS}"
 						    AC_DEFINE([HAVE_MPG123], [1], [Set to 1 if you have libmpg123])
 						    enable_libmpg123=yes
 						  ], [ ])
