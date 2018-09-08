@@ -207,7 +207,7 @@ mp3_open	(SF_PRIVATE *psf)
 			}
 
 			mpg123_scan (mdata->mh) ;
-			psf->datalength = mpg123_length (mdata->mh) ;
+			psf->datalength = mpg123_length (mdata->mh) * MPG123_SAMPLESIZE (mdata->encoding) ;
 			psf->dataoffset = 0 ;
 			psf->sf.frames = mpg123_length (mdata->mh) ;
 
